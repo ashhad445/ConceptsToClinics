@@ -10,6 +10,7 @@ export interface Course {
   thumbnail: string;
   order: number;
   isPublished: boolean;
+  durationDays?: number;
   totalPlaylists: number;
   totalVideos: number;
   createdAt: { _seconds: number };

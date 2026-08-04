@@ -39,8 +39,9 @@ const CourseDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // ── Course edit modal state ────────────────────────────────────────────────
+  // ── Course edit modal state ────────────────────────────────────────────────
   const [editCourseModal, setEditCourseModal] = useState(false);
-  const [courseForm, setCourseForm] = useState({ title: '', description: '', thumbnail: '', order: '1' });
+  const [courseForm, setCourseForm] = useState({ title: '', description: '', thumbnail: '', order: '1', durationDays: '365' });
   const [savingCourse, setSavingCourse] = useState(false);
   const [togglingPublish, setTogglingPublish] = useState(false);
 
@@ -83,7 +84,7 @@ const CourseDetailPage: React.FC = () => {
         const c = courses.find((c) => c.id === id);
         if (c) {
           setCourse(c);
-          setCourseForm({ title: c.title, description: c.description, thumbnail: c.thumbnail, order: String(c.order) });
+          setCourseForm({ title: c.title, description: c.description, thumbnail: c.thumbnail, order: String(c.order), durationDays: String(c.durationDays ?? 365) });
           try {
             pls = await getCoursePlaylists(id!);
           } catch {
@@ -137,8 +138,9 @@ const CourseDetailPage: React.FC = () => {
     if (!course) return;
     setSavingCourse(true);
     try {
-      await updateCourse(id!, { ...courseForm, order: Number(courseForm.order) });
-      setCourse({ ...course, ...courseForm, order: Number(courseForm.order) });
+      const updatedDur = Number(courseForm.durationDays || '365');
+      await updateCourse(id!, { ...courseForm, order: Number(courseForm.order), durationDays: updatedDur });
+      setCourse({ ...course, ...courseForm, order: Number(courseForm.order), durationDays: updatedDur });
       toast.success('Course updated!');
       setEditCourseModal(false);
     } catch {
@@ -799,6 +801,10 @@ const CourseDetailPage: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Display Order</label>
             <input type="number" className="form-input" min={1} value={courseForm.order} onChange={(e) => setCourseForm({ ...courseForm, order: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Access Duration per Student (Days)</label>
+            <input type="number" className="form-input" min={0} placeholder="e.g. 180 (0 = unlimited, default 365)" value={courseForm.durationDays} onChange={(e) => setCourseForm({ ...courseForm, durationDays: e.target.value })} />
           </div>
         </div>
         <div className="modal-footer">
