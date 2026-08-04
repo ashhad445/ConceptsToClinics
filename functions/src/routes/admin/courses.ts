@@ -255,6 +255,112 @@ router.post(
   }
 );
 
+// ─── POST /admin/courses/:id/playlists/attach-existing ────────────────────
+/**
+ * Copies an existing playlist (and all its videos) from another course into
+ * this course. Video documents are duplicated, but bunnyVideoGuid values are
+ * REUSED — no re-upload to Bunny Stream happens. This lets the tutor share
+ * the same lecture videos across multiple courses without duplicating
+ * storage or bandwidth cost.
+ *
+ * Body: { sourceCourseId: string, sourcePlaylistId: string, order: number }
+ */
+router.post(
+  "/:id/playlists/attach-existing",
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const targetCourseId = req.params.id;
+    const { sourceCourseId, sourcePlaylistId, order } = req.body;
+
+    if (!sourceCourseId || !sourcePlaylistId || order == null) {
+      res.status(400).json({
+        code: ErrorCodes.INTERNAL_ERROR,
+        message: "Missing required fields: sourceCourseId, sourcePlaylistId, order.",
+      });
+      return;
+    }
+
+    try {
+      const targetCourseRef = db.collection("courses").doc(targetCourseId);
+      const sourcePlaylistRef = db
+        .collection("courses")
+        .doc(sourceCourseId)
+        .collection("playlists")
+        .doc(sourcePlaylistId);
+
+      const [targetCourseSnap, sourcePlaylistSnap] = await Promise.all([
+        targetCourseRef.get(),
+        sourcePlaylistRef.get(),
+      ]);
+
+      if (!targetCourseSnap.exists) {
+        res.status(404).json({ code: ErrorCodes.NOT_FOUND, message: "Target course not found." });
+        return;
+      }
+      if (!sourcePlaylistSnap.exists) {
+        res.status(404).json({ code: ErrorCodes.NOT_FOUND, message: "Source playlist not found." });
+        return;
+      }
+
+      const sourcePlaylistData = sourcePlaylistSnap.data() as PlaylistDoc;
+
+      const sourceVideosSnap = await sourcePlaylistRef.collection("videos").orderBy("order").get();
+      const sourceVideos = sourceVideosSnap.docs.map((doc) => doc.data() as VideoDoc);
+
+      const now = new Date();
+
+      const newPlaylistData: PlaylistDoc = {
+        title: sourcePlaylistData.title,
+        description: sourcePlaylistData.description,
+        order: Number(order),
+        totalVideos: sourceVideos.length,
+        createdAt: now as unknown as FirebaseFirestore.Timestamp,
+      };
+
+      const newPlaylistRef = targetCourseRef.collection("playlists").doc();
+
+      const batch = db.batch();
+      batch.set(newPlaylistRef, newPlaylistData);
+
+      sourceVideos.forEach((video) => {
+        const newVideoRef = newPlaylistRef.collection("videos").doc();
+        const newVideoData: VideoDoc = {
+          title: video.title,
+          description: video.description,
+          bunnyVideoGuid: video.bunnyVideoGuid, // REUSED — no re-upload
+          order: video.order,
+          isFreePreview: video.isFreePreview,
+          status: video.status,
+          duration: video.duration,
+          courseId: targetCourseId,
+          playlistId: newPlaylistRef.id,
+          uploadedAt: video.uploadedAt,
+          createdAt: now as unknown as FirebaseFirestore.Timestamp,
+        };
+        batch.set(newVideoRef, newVideoData);
+      });
+
+      batch.update(targetCourseRef, {
+        totalPlaylists: admin.firestore.FieldValue.increment(1),
+        totalVideos: admin.firestore.FieldValue.increment(sourceVideos.length),
+      });
+
+      await batch.commit();
+
+      console.log(
+        `[admin/courses POST /${targetCourseId}/playlists/attach-existing] Attached "${sourcePlaylistData.title}" (${sourceVideos.length} videos) from course ${sourceCourseId} — new playlist ID: ${newPlaylistRef.id}`
+      );
+
+      res.status(201).json({ id: newPlaylistRef.id, ...newPlaylistData });
+    } catch (error) {
+      console.error(`[admin/courses POST /${targetCourseId}/playlists/attach-existing] Error:`, error);
+      res.status(500).json({
+        code: ErrorCodes.INTERNAL_ERROR,
+        message: "Failed to attach existing playlist.",
+      });
+    }
+  }
+);
+
 // ─── PUT /admin/courses/:id/playlists/:playlistId ────────────────────────────
 
 /**
@@ -1020,23 +1126,27 @@ router.delete(
         });
       });
 
-      // Clean up Bunny Stream storage asynchronously to prevent orphan files
+      // ── Check if any OTHER video document still references this bunnyVideoGuid ──
       if (bunnyGuid) {
-        deleteBunnyVideo(bunnyGuid).catch((err) =>
-          console.error(`[Delete Video] Failed to delete Bunny video ${bunnyGuid}:`, err)
-        );
-      }
+        const otherReferencesSnap = await db
+          .collectionGroup("videos")
+          .where("bunnyVideoGuid", "==", bunnyGuid)
+          .limit(1)
+          .get();
 
-      console.log(
-        `[admin/courses DELETE /${courseId}/playlists/${playlistId}/videos/${videoId}] Video deleted from Firestore & Bunny (${bunnyGuid})`
-      );
+        if (otherReferencesSnap.empty) {
+          deleteBunnyVideo(bunnyGuid).catch((err) =>
+            console.error(`[Delete Video] Failed to delete Bunny video ${bunnyGuid}:`, err)
+          );
+          console.log(`[Delete Video] No other references — deleted from Bunny: ${bunnyGuid}`);
+        } else {
+          console.log(`[Delete Video] Other course(s) still reference ${bunnyGuid} — Bunny file preserved.`);
+        }
+      }
 
       res.status(200).json({ message: "Video deleted successfully." });
     } catch (error) {
-      console.error(
-        `[admin/courses DELETE /${courseId}/playlists/${playlistId}/videos/${videoId}] Error:`,
-        error
-      );
+      console.error(`[admin/courses DELETE /${courseId}/playlists/${playlistId}/videos/${videoId}] Error:`, error);
       res.status(500).json({
         code: ErrorCodes.INTERNAL_ERROR,
         message: "Failed to delete video.",

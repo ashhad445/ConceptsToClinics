@@ -8,14 +8,15 @@ import {
   getCourses, updateCourse,
   getCoursePlaylists, createPlaylist, updatePlaylist, deletePlaylist,
   getPlaylistVideos, createVideo, updateVideo, deleteVideo,
+  getAllPlaylists, attachExistingPlaylist,
 } from '../api/courses';
-import type { Course, Playlist, Video } from '../api/courses';
+import type { Course, Playlist, Video, AttachablePlaylist } from '../api/courses';
 import { useUploadManager } from '../context/UploadContext';
 import toast from 'react-hot-toast';
 import {
   RiArrowLeftLine, RiAddLine, RiEditLine, RiDeleteBinLine,
   RiArrowUpLine, RiArrowDownLine, RiEyeLine, RiEyeOffLine,
-  RiPlayListLine, RiArrowDownSLine, RiArrowUpSLine,
+  RiPlayListLine, RiArrowDownSLine, RiArrowUpSLine, RiFileCopyLine,
 } from 'react-icons/ri';
 
 // ─── Local types ──────────────────────────────────────────────────────────────
@@ -48,6 +49,14 @@ const CourseDetailPage: React.FC = () => {
   const [editingPlaylist, setEditingPlaylist] = useState<PlaylistWithVideos | null>(null);
   const [playlistForm, setPlaylistForm] = useState({ title: '', description: '', order: '1' });
   const [savingPlaylist, setSavingPlaylist] = useState(false);
+
+  // ── Attach existing playlist state ─────────────────────────────────────────
+  const [attachModal, setAttachModal] = useState(false);
+  const [allPlaylists, setAllPlaylists] = useState<AttachablePlaylist[]>([]);
+  const [loadingAllPlaylists, setLoadingAllPlaylists] = useState(false);
+  const [selectedPlaylistToAttach, setSelectedPlaylistToAttach] = useState<AttachablePlaylist | null>(null);
+  const [attachOrder, setAttachOrder] = useState('1');
+  const [attaching, setAttaching] = useState(false);
 
   // ── Delete playlist confirm ────────────────────────────────────────────────
   const [deletePlaylistTarget, setDeletePlaylistTarget] = useState<string | null>(null);
@@ -200,6 +209,53 @@ const CourseDetailPage: React.FC = () => {
       toast.error('Failed to save playlist.');
     } finally {
       setSavingPlaylist(false);
+    }
+  };
+
+  const openAttachModal = async () => {
+    setAttachModal(true);
+    setLoadingAllPlaylists(true);
+    try {
+      const all = await getAllPlaylists();
+      setAllPlaylists(all.filter((p) => p.sourceCourseId !== id));
+    } catch {
+      toast.error('Failed to load playlists.');
+    } finally {
+      setLoadingAllPlaylists(false);
+    }
+  };
+
+  const handleAttachPlaylist = async () => {
+    if (!selectedPlaylistToAttach) {
+      toast.error('Please select a playlist to attach.');
+      return;
+    }
+    setAttaching(true);
+    try {
+      const newPl = await attachExistingPlaylist(id!, {
+        sourceCourseId: selectedPlaylistToAttach.sourceCourseId,
+        sourcePlaylistId: selectedPlaylistToAttach.playlistId,
+        order: Number(attachOrder),
+      });
+      setPlaylists((prev) =>
+        [...prev, { ...newPl, videos: [], expanded: false, videosLoaded: false }].sort(
+          (a, b) => a.order - b.order
+        )
+      );
+      if (course) {
+        setCourse({
+          ...course,
+          totalPlaylists: course.totalPlaylists + 1,
+          totalVideos: course.totalVideos + (newPl.totalVideos ?? 0),
+        });
+      }
+      toast.success(`Playlist "${newPl.title}" attached!`);
+      setAttachModal(false);
+      setSelectedPlaylistToAttach(null);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to attach playlist.');
+    } finally {
+      setAttaching(false);
     }
   };
 
@@ -519,9 +575,14 @@ const CourseDetailPage: React.FC = () => {
           </div>
           <div className="page-subtitle">Manage playlists and their videos</div>
         </div>
-        <button className="btn btn-primary" onClick={openAddPlaylist}>
-          <RiAddLine /> Add Playlist
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="btn btn-secondary" onClick={openAttachModal}>
+            <RiFileCopyLine /> Attach Existing Playlist
+          </button>
+          <button className="btn btn-primary" onClick={openAddPlaylist}>
+            <RiAddLine /> Add Playlist
+          </button>
+        </div>
       </div>
 
       {/* Playlists Accordion */}
@@ -790,6 +851,59 @@ const CourseDetailPage: React.FC = () => {
           <button className="btn btn-secondary" onClick={() => setPlaylistModal(false)}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSavePlaylist} disabled={savingPlaylist}>
             {savingPlaylist ? <span className="spinner-sm spinner" /> : editingPlaylist ? 'Save Changes' : 'Create Playlist'}
+          </button>
+        </div>
+      </Modal>
+
+      {/* ── Attach Existing Playlist Modal ───────────────────────────────── */}
+      <Modal isOpen={attachModal} onClose={() => setAttachModal(false)} title="Attach Existing Playlist">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p className="text-muted text-sm">
+            Reuse a playlist and its videos from another course. No videos will be
+            re-uploaded — this saves storage and upload time. Note: this creates an
+            independent copy — editing a video here later will not update the original.
+          </p>
+          {loadingAllPlaylists ? (
+            <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" /></div>
+          ) : allPlaylists.length === 0 ? (
+            <p className="text-muted text-sm">No other playlists available to attach.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
+              {allPlaylists.map((pl) => (
+                <div
+                  key={`${pl.sourceCourseId}-${pl.playlistId}`}
+                  onClick={() => setSelectedPlaylistToAttach(pl)}
+                  style={{
+                    padding: 12,
+                    borderRadius: 8,
+                    border: selectedPlaylistToAttach?.playlistId === pl.playlistId
+                      ? '2px solid var(--accent)' : '1px solid var(--border-subtle)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 600 }}>{pl.playlistTitle}</div>
+                  <div className="text-muted text-sm">
+                    From: {pl.sourceCourseTitle} · {pl.totalVideos} video{pl.totalVideos !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="form-group">
+            <label className="form-label">Display Order in This Course</label>
+            <input
+              type="number"
+              className="form-input"
+              min={1}
+              value={attachOrder}
+              onChange={(e) => setAttachOrder(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={() => setAttachModal(false)}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleAttachPlaylist} disabled={attaching || !selectedPlaylistToAttach}>
+            {attaching ? <span className="spinner-sm spinner" /> : 'Attach Playlist'}
           </button>
         </div>
       </Modal>

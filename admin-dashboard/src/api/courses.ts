@@ -88,6 +88,28 @@ export const deletePlaylist = async (courseId: string, playlistId: string): Prom
   await apiClient.delete(`/admin/courses/${courseId}/playlists/${playlistId}`);
 };
 
+export interface AttachablePlaylist {
+  playlistId: string;
+  playlistTitle: string;
+  playlistDescription: string;
+  totalVideos: number;
+  sourceCourseId: string;
+  sourceCourseTitle: string;
+}
+
+export const getAllPlaylists = async (): Promise<AttachablePlaylist[]> => {
+  const res = await apiClient.get('/admin/playlists/all');
+  return res.data.playlists;
+};
+
+export const attachExistingPlaylist = async (
+  targetCourseId: string,
+  data: { sourceCourseId: string; sourcePlaylistId: string; order: number }
+): Promise<Playlist> => {
+  const res = await apiClient.post(`/admin/courses/${targetCourseId}/playlists/attach-existing`, data);
+  return res.data;
+};
+
 // ─── Videos ───────────────────────────────────────────────────────────────────
 
 export const getPlaylistVideos = async (courseId: string, playlistId: string): Promise<Video[]> => {
