@@ -1,8 +1,9 @@
+import * as admin from "firebase-admin";
 import { Router, Response } from "express";
 import { db, auth } from "../../config/firebase";
 import { verifyToken } from "../../middleware/verifyToken";
 import { verifyAdmin } from "../../middleware/verifyAdmin";
-import { AuthenticatedRequest, UserDoc, ProgressDoc, ErrorCodes } from "../../types";
+import { AuthenticatedRequest, UserDoc, CourseDoc, ProgressDoc, ErrorCodes } from "../../types";
 
 const router = Router();
 
@@ -40,6 +41,7 @@ router.get(
           subscriptionActive: data.subscriptionActive,
           subscriptionExpiry: data.subscriptionExpiry,
           enrolledCourses: data.enrolledCourses || [],
+          courseExpiries: data.courseExpiries || {},
           signupCodeUsed: data.signupCodeUsed || "N/A",
           createdAt: data.createdAt,
           isAuthOnly: false,
@@ -62,6 +64,7 @@ router.get(
             subscriptionActive: false,
             subscriptionExpiry: null,
             enrolledCourses: [],
+            courseExpiries: {},
             signupCodeUsed: "N/A",
             createdAt: authUser.metadata.creationTime
               ? new Date(authUser.metadata.creationTime)
@@ -115,16 +118,18 @@ router.get(
         .get();
 
       const progress = progressSnap.docs.map((doc) => {
-        const data = doc.data() as ProgressDoc;
+        const pData = doc.data() as ProgressDoc;
         return {
-          videoId: doc.id,
-          courseId: data.courseId,
-          watchedSeconds: data.watchedSeconds,
-          totalSeconds: data.totalSeconds,
-          percentComplete: data.percentComplete,
-          isCompleted: data.isCompleted,
-          lastWatchedAt: data.lastWatchedAt,
-          firstWatchedAt: data.firstWatchedAt,
+          id: doc.id,
+          videoId: pData.videoId,
+          courseId: pData.courseId,
+          playlistId: pData.playlistId || null,
+          watchedSeconds: pData.watchedSeconds || 0,
+          totalSeconds: pData.totalSeconds || 0,
+          percentComplete: pData.percentComplete || 0,
+          isCompleted: pData.isCompleted || false,
+          lastWatchedAt: pData.lastWatchedAt,
+          firstWatchedAt: pData.firstWatchedAt,
         };
       });
 
@@ -138,13 +143,14 @@ router.get(
           registeredDeviceId: studentData.registeredDeviceId,
           registeredDeviceName: studentData.registeredDeviceName ?? null,
           registeredDeviceFriendlyName: studentData.registeredDeviceFriendlyName ?? null,
-          attemptedDeviceId: studentData.attemptedDeviceId ?? null,
-          attemptedDeviceName: studentData.attemptedDeviceName ?? null,
-          attemptedDeviceFriendlyName: studentData.attemptedDeviceFriendlyName ?? null,
-          attemptedLoginAt: studentData.attemptedLoginAt ?? null,
+          attemptedDeviceId: studentData.attemptedDeviceId || null,
+          attemptedDeviceName: studentData.attemptedDeviceName || null,
+          attemptedDeviceFriendlyName: studentData.attemptedDeviceFriendlyName || null,
+          attemptedLoginAt: studentData.attemptedLoginAt || null,
           subscriptionActive: studentData.subscriptionActive,
           subscriptionExpiry: studentData.subscriptionExpiry,
-          enrolledCourses: studentData.enrolledCourses,
+          enrolledCourses: studentData.enrolledCourses || [],
+          courseExpiries: studentData.courseExpiries || {},
           signupCodeUsed: studentData.signupCodeUsed,
           createdAt: studentData.createdAt,
         },
@@ -163,53 +169,16 @@ router.get(
 // ─── PUT /admin/students/:id ──────────────────────────────────────────────────
 
 /**
- * Updates a student's subscription status, expiry, or enrolled courses.
+ * Updates a student's subscription status, expiry, or enrolled courses/courseExpiries.
  * Used for toggling subscriptions and manually adding/removing course access.
  *
- * Body: { subscriptionActive?, subscriptionExpiry?, enrolledCourses? }
+ * Body: { subscriptionActive?, subscriptionExpiry?, enrolledCourses?, courseExpiries? }
  */
 router.put(
   "/:id",
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const studentId = req.params.id;
-    const { subscriptionActive, subscriptionExpiry, enrolledCourses } = req.body;
-
-    // Build update object — only include fields that were provided
-    const updates: Partial<Record<string, unknown>> = {};
-
-    if (subscriptionActive !== undefined) {
-      if (typeof subscriptionActive !== "boolean") {
-        res.status(400).json({
-          code: ErrorCodes.INTERNAL_ERROR,
-          message: "subscriptionActive must be a boolean.",
-        });
-        return;
-      }
-      updates.subscriptionActive = subscriptionActive;
-    }
-
-    if (subscriptionExpiry !== undefined) {
-      updates.subscriptionExpiry = subscriptionExpiry ? new Date(subscriptionExpiry) : null;
-    }
-
-    if (enrolledCourses !== undefined) {
-      if (!Array.isArray(enrolledCourses)) {
-        res.status(400).json({
-          code: ErrorCodes.INTERNAL_ERROR,
-          message: "enrolledCourses must be an array of course IDs.",
-        });
-        return;
-      }
-      updates.enrolledCourses = enrolledCourses;
-    }
-
-    if (Object.keys(updates).length === 0) {
-      res.status(400).json({
-        code: ErrorCodes.INTERNAL_ERROR,
-        message: "No valid fields provided to update.",
-      });
-      return;
-    }
+    const { subscriptionActive, subscriptionExpiry, enrolledCourses, courseExpiries } = req.body;
 
     try {
       const studentRef = db.collection("users").doc(studentId);
@@ -219,6 +188,77 @@ router.put(
         res.status(404).json({
           code: ErrorCodes.NOT_FOUND,
           message: "Student not found.",
+        });
+        return;
+      }
+
+      const existingData = studentSnap.data() as UserDoc;
+      const updates: Partial<Record<string, unknown>> = {};
+
+      if (subscriptionActive !== undefined) {
+        if (typeof subscriptionActive !== "boolean") {
+          res.status(400).json({
+            code: ErrorCodes.INTERNAL_ERROR,
+            message: "subscriptionActive must be a boolean.",
+          });
+          return;
+        }
+        updates.subscriptionActive = subscriptionActive;
+      }
+
+      if (subscriptionExpiry !== undefined) {
+        updates.subscriptionExpiry = subscriptionExpiry ? new Date(subscriptionExpiry) : null;
+      }
+
+      const now = new Date();
+      let updatedExpiries: Record<string, any> = { ...(existingData.courseExpiries || {}) };
+
+      if (courseExpiries !== undefined && typeof courseExpiries === "object" && courseExpiries !== null) {
+        Object.keys(courseExpiries).forEach((cId) => {
+          const val = courseExpiries[cId];
+          if (val === null || val === "") {
+            delete updatedExpiries[cId];
+          } else {
+            updatedExpiries[cId] = admin.firestore.Timestamp.fromDate(new Date(val));
+          }
+        });
+        updates.courseExpiries = updatedExpiries;
+      }
+
+      if (enrolledCourses !== undefined) {
+        if (!Array.isArray(enrolledCourses)) {
+          res.status(400).json({
+            code: ErrorCodes.INTERNAL_ERROR,
+            message: "enrolledCourses must be an array of course IDs.",
+          });
+          return;
+        }
+        updates.enrolledCourses = enrolledCourses;
+
+        // Auto-calculate expiries for newly added courses if not already explicitly set
+        await Promise.all(
+          enrolledCourses.map(async (cId: string) => {
+            if (!updatedExpiries[cId]) {
+              const cSnap = await db.collection("courses").doc(cId).get();
+              if (cSnap.exists) {
+                const cData = cSnap.data() as CourseDoc;
+                const days = cData.durationDays != null ? cData.durationDays : 365;
+                if (days > 0) {
+                  const expDate = new Date(now.getTime() + days * 86400 * 1000);
+                  updatedExpiries[cId] = admin.firestore.Timestamp.fromDate(expDate);
+                }
+              }
+            }
+          })
+        );
+
+        updates.courseExpiries = updatedExpiries;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        res.status(400).json({
+          code: ErrorCodes.INTERNAL_ERROR,
+          message: "No valid fields provided to update.",
         });
         return;
       }

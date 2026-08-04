@@ -94,6 +94,41 @@ const StudentDetailPage: React.FC = () => {
     }
   };
 
+  const getCourseExpiryDateString = (courseId: string) => {
+    const exp = student?.courseExpiries?.[courseId];
+    if (!exp) return '';
+    if (typeof exp === 'object' && exp !== null && '_seconds' in exp) {
+      return new Date((exp as { _seconds: number })._seconds * 1000).toISOString().split('T')[0];
+    }
+    if (typeof exp === 'string') {
+      return exp.split('T')[0];
+    }
+    return '';
+  };
+
+  const handleSaveCourseExpiry = async (courseId: string, newDateStr: string) => {
+    if (!student) return;
+    try {
+      const updatedExpiries: Record<string, string | null> = {};
+      if (student.courseExpiries) {
+        Object.keys(student.courseExpiries).forEach((key) => {
+          const val = student.courseExpiries![key];
+          if (typeof val === 'string') {
+            updatedExpiries[key] = val;
+          } else if (val && typeof val === 'object' && '_seconds' in val) {
+            updatedExpiries[key] = new Date(val._seconds * 1000).toISOString();
+          }
+        });
+      }
+      updatedExpiries[courseId] = newDateStr ? newDateStr : null;
+      await updateStudent(id!, { courseExpiries: updatedExpiries });
+      setStudent({ ...student, courseExpiries: updatedExpiries as any });
+      toast.success('Course access expiry updated.');
+    } catch {
+      toast.error('Failed to update course expiry.');
+    }
+  };
+
   const handleResetDevice = async () => {
     setResetting(true);
     try {
@@ -373,14 +408,19 @@ const StudentDetailPage: React.FC = () => {
                 {student.enrolledCourses.map((courseId) => {
                   const course = getCourseById(courseId);
                   const { completed, total, pct } = getProgressForCourse(courseId);
+                  const currentCourseExp = getCourseExpiryDateString(courseId);
+                  const isCourseAccessExpired = currentCourseExp && new Date(currentCourseExp).getTime() < Date.now();
                   return (
                     <div key={courseId} style={{
                       background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)',
                       padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8,
-                      border: '1px solid var(--border-subtle)',
+                      border: isCourseAccessExpired ? '1px solid var(--danger)' : '1px solid var(--border-subtle)',
                     }}>
                       <div className="flex items-center justify-between">
-                        <div style={{ fontWeight: 600 }}>{course?.title ?? courseId}</div>
+                        <div className="flex items-center gap-2">
+                          <div style={{ fontWeight: 600 }}>{course?.title ?? courseId}</div>
+                          {isCourseAccessExpired && <span className="badge badge-danger">Expired</span>}
+                        </div>
                         <button
                           className="btn-icon btn"
                           onClick={() => handleRemoveCourse(courseId)}
@@ -397,6 +437,19 @@ const StudentDetailPage: React.FC = () => {
                           />
                         </div>
                         <span className="text-sm text-muted">{completed}/{total} videos · {pct}%</span>
+                      </div>
+                      {/* Course Specific Access Expiry Date Input */}
+                      <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                        <span className="text-xs text-muted" style={{ fontWeight: 500 }}>
+                          Access Expiry Date:
+                        </span>
+                        <input
+                          type="date"
+                          className="form-input text-xs"
+                          style={{ width: 140, padding: '2px 6px', height: 28 }}
+                          value={currentCourseExp}
+                          onChange={(e) => handleSaveCourseExpiry(courseId, e.target.value)}
+                        />
                       </div>
                     </div>
                   );

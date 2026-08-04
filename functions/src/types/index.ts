@@ -18,6 +18,7 @@ export interface UserDoc {
   subscriptionExpiry: FirebaseFirestore.Timestamp | null;
   signupCodeUsed: string;
   enrolledCourses: string[]; // array of courseIds
+  courseExpiries?: Record<string, FirebaseFirestore.Timestamp | null>; // courseId -> expiry date
   createdAt: FirebaseFirestore.Timestamp;
   // ── Unauthorized attempt tracking ────────────────────────────
   attemptedDeviceId: string | null;
@@ -32,6 +33,7 @@ export interface CourseDoc {
   thumbnail: string; // image URL
   order: number;
   isPublished: boolean;
+  durationDays?: number; // access duration per student in days (0 or undefined = 365 default)
   totalPlaylists: number; // number of playlists in this course
   totalVideos: number;   // sum of all videos across all playlists
   createdAt: FirebaseFirestore.Timestamp;

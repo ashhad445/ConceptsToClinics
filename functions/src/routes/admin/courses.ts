@@ -20,7 +20,7 @@ router.use(verifyToken, verifyAdmin);
 router.post(
   "/",
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const { title, description, thumbnail, order } = req.body;
+    const { title, description, thumbnail, order, durationDays } = req.body;
 
     if (!title || !description || !thumbnail || order == null) {
       res.status(400).json({
@@ -38,6 +38,7 @@ router.post(
         thumbnail: thumbnail.trim(),
         order: Number(order),
         isPublished: false,
+        durationDays: durationDays != null ? Number(durationDays) : 365,
         totalPlaylists: 0,
         totalVideos: 0,
         createdAt: now as unknown as FirebaseFirestore.Timestamp,
@@ -81,6 +82,7 @@ router.get(
           thumbnail: data.thumbnail,
           order: data.order,
           isPublished: data.isPublished,
+          durationDays: data.durationDays ?? 365,
           totalPlaylists: data.totalPlaylists ?? 0,
           totalVideos: data.totalVideos ?? 0,
           createdAt: data.createdAt,
@@ -102,13 +104,13 @@ router.get(
 
 /**
  * Updates course metadata fields.
- * Body: { title?, description?, thumbnail?, order?, isPublished? }
+ * Body: { title?, description?, thumbnail?, order?, isPublished?, durationDays? }
  */
 router.put(
   "/:id",
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const courseId = req.params.id;
-    const { title, description, thumbnail, order, isPublished } = req.body;
+    const { title, description, thumbnail, order, isPublished, durationDays } = req.body;
 
     const updates: Partial<Record<string, unknown>> = {};
     if (title !== undefined) updates.title = title.trim();
@@ -116,6 +118,7 @@ router.put(
     if (thumbnail !== undefined) updates.thumbnail = thumbnail.trim();
     if (order !== undefined) updates.order = Number(order);
     if (isPublished !== undefined) updates.isPublished = Boolean(isPublished);
+    if (durationDays !== undefined) updates.durationDays = Number(durationDays);
 
     if (Object.keys(updates).length === 0) {
       res.status(400).json({

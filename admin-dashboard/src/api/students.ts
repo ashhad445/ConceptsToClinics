@@ -16,6 +16,7 @@ export interface Student {
   subscriptionActive: boolean;
   subscriptionExpiry: { _seconds: number } | null;
   enrolledCourses: string[];
+  courseExpiries?: Record<string, { _seconds: number } | string | null>;
   signupCodeUsed: string;
   createdAt: { _seconds: number };
   isAuthOnly?: boolean;
@@ -45,7 +46,12 @@ export const getStudent = async (id: string): Promise<{ student: Student; progre
 
 export const updateStudent = async (
   id: string,
-  data: { subscriptionActive?: boolean; subscriptionExpiry?: string | null; enrolledCourses?: string[] }
+  data: {
+    subscriptionActive?: boolean;
+    subscriptionExpiry?: string | null;
+    enrolledCourses?: string[];
+    courseExpiries?: Record<string, string | null>;
+  }
 ): Promise<void> => {
   await apiClient.put(`/admin/students/${id}`, data);
 };

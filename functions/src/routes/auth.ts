@@ -3,7 +3,7 @@ import * as crypto from "crypto";
 import { auth, db, admin } from "../config/firebase";
 import { verifyToken } from "../middleware/verifyToken";
 import { registerRateLimiter, loginRateLimiter } from "../middleware/rateLimiter";
-import { AuthenticatedRequest, UserDoc, SignupCodeDoc, ErrorCodes } from "../types";
+import { AuthenticatedRequest, UserDoc, CourseDoc, SignupCodeDoc, ErrorCodes } from "../types";
 
 const router = Router();
 
@@ -124,6 +124,23 @@ router.post("/register", registerRateLimiter, async (req, res): Promise<void> =>
     // ── 3b. Generate unique student ID ────────────────────────────────
     const studentId = await generateStudentId(db);
 
+    const courseExpiries: Record<string, FirebaseFirestore.Timestamp> = {};
+    if (codeDoc.grantsCourses && codeDoc.grantsCourses.length > 0) {
+      await Promise.all(
+        codeDoc.grantsCourses.map(async (cId) => {
+          const cSnap = await db.collection("courses").doc(cId).get();
+          if (cSnap.exists) {
+            const cData = cSnap.data() as CourseDoc;
+            const days = cData.durationDays != null ? cData.durationDays : 365;
+            if (days > 0) {
+              const expDate = new Date(now.getTime() + days * 86400 * 1000);
+              courseExpiries[cId] = admin.firestore.Timestamp.fromDate(expDate);
+            }
+          }
+        })
+      );
+    }
+
     // ── 4. Write users/{uid} document ───────────────────────────────
     const userDoc: UserDoc = {
       email: email.trim().toLowerCase(),
@@ -138,6 +155,7 @@ router.post("/register", registerRateLimiter, async (req, res): Promise<void> =>
       subscriptionExpiry: null,
       signupCodeUsed: signupCode.trim().toUpperCase(),
       enrolledCourses: codeDoc.grantsCourses,
+      courseExpiries,
       createdAt: now as unknown as FirebaseFirestore.Timestamp,
       attemptedDeviceId: null,
       attemptedDeviceName: null,

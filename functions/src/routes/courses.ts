@@ -5,6 +5,8 @@ import { verifySession } from "../middleware/verifySession";
 import { verifyDevice } from "../middleware/verifyDevice";
 import { AuthenticatedRequest, CourseDoc, PlaylistDoc, VideoDoc, ErrorCodes } from "../types";
 
+import { isCourseAccessActive } from "../utils/courseAccess";
+
 const router = Router();
 
 // ─── Subscription Helper ──────────────────────────────────────────────────────
@@ -47,7 +49,7 @@ router.get(
       return;
     }
 
-    const enrolledCourses = req.userDoc!.enrolledCourses || [];
+    const userDoc = req.userDoc!;
 
     try {
       // Fetch ALL published courses
@@ -76,23 +78,33 @@ router.get(
 
       const courses = coursesSnap.docs.map((doc) => {
         const data = doc.data() as CourseDoc;
-        const isEnrolled = enrolledCourses.includes(doc.id);
+        const accessCheck = isCourseAccessActive(userDoc, doc.id);
+        const isEnrolled = accessCheck.active;
         const completedVideos = completedCountByCourse[doc.id] || 0;
         const progressPercent =
           data.totalVideos > 0
             ? Math.round((completedVideos / data.totalVideos) * 100)
             : 0;
 
+        const rawCourseExpiry = userDoc.courseExpiries?.[doc.id];
+        const expiresAtIso = rawCourseExpiry
+          ? (typeof (rawCourseExpiry as any).toDate === "function"
+              ? (rawCourseExpiry as any).toDate().toISOString()
+              : new Date(rawCourseExpiry as any).toISOString())
+          : null;
+
         return {
           id: doc.id,
           title: data.title,
           description: data.description,
           thumbnail: data.thumbnail,
+          durationDays: data.durationDays ?? 365,
           totalPlaylists: data.totalPlaylists ?? 0,
           totalVideos: data.totalVideos ?? 0,
           completedVideos,
           progressPercent,
           isEnrolled,
+          expiresAt: expiresAtIso,
         };
       });
 
@@ -121,21 +133,13 @@ router.get(
   verifySession,
   verifyDevice,
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    if (!isSubscriptionActive(req)) {
-      res.status(403).json({
-        code: ErrorCodes.SUBSCRIPTION_INACTIVE,
-        message: "Your subscription is not active. Please contact your instructor.",
-      });
-      return;
-    }
-
     const courseId = req.params.id;
-    const enrolledCourses = req.userDoc!.enrolledCourses;
+    const accessCheck = isCourseAccessActive(req.userDoc!, courseId);
 
-    if (!enrolledCourses.includes(courseId)) {
+    if (!accessCheck.active) {
       res.status(403).json({
         code: ErrorCodes.NOT_ENROLLED,
-        message: "You are not enrolled in this course.",
+        message: accessCheck.reason || "You do not have access to this course.",
       });
       return;
     }
@@ -211,22 +215,14 @@ router.get(
   verifySession,
   verifyDevice,
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    if (!isSubscriptionActive(req)) {
-      res.status(403).json({
-        code: ErrorCodes.SUBSCRIPTION_INACTIVE,
-        message: "Your subscription is not active. Please contact your instructor.",
-      });
-      return;
-    }
-
     const courseId = req.params.id;
     const playlistId = req.params.playlistId;
-    const enrolledCourses = req.userDoc!.enrolledCourses;
+    const accessCheck = isCourseAccessActive(req.userDoc!, courseId);
 
-    if (!enrolledCourses.includes(courseId)) {
+    if (!accessCheck.active) {
       res.status(403).json({
         code: ErrorCodes.NOT_ENROLLED,
-        message: "You are not enrolled in this course.",
+        message: accessCheck.reason || "You do not have access to this course.",
       });
       return;
     }

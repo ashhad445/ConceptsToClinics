@@ -15,7 +15,7 @@ const CoursesPage: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ title: '', description: '', thumbnail: '', order: '1' });
+  const [form, setForm] = useState({ title: '', description: '', thumbnail: '', order: '1', durationDays: '365' });
 
   useEffect(() => {
     const load = async () => {
@@ -37,11 +37,11 @@ const CoursesPage: React.FC = () => {
     }
     setCreating(true);
     try {
-      await createCourse({ ...form, order: Number(form.order) });
+      await createCourse({ ...form, order: Number(form.order), durationDays: Number(form.durationDays || '365') });
       toast.success('Course created!');
       setCourses(await getCourses());
       setCreateModal(false);
-      setForm({ title: '', description: '', thumbnail: '', order: '1' });
+      setForm({ title: '', description: '', thumbnail: '', order: '1', durationDays: '365' });
     } catch {
       toast.error('Failed to create course.');
     } finally {
@@ -124,6 +124,10 @@ const CoursesPage: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Display Order</label>
             <input type="number" className="form-input" min={1} value={form.order} onChange={(e) => setForm({ ...form, order: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Access Duration per Student (Days)</label>
+            <input type="number" className="form-input" min={0} placeholder="e.g. 180 (0 = unlimited, default 365)" value={form.durationDays} onChange={(e) => setForm({ ...form, durationDays: e.target.value })} />
           </div>
         </div>
         <div className="modal-footer">

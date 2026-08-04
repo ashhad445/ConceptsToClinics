@@ -6,6 +6,8 @@ import { verifyDevice } from "../middleware/verifyDevice";
 import { AuthenticatedRequest, VideoDoc, ErrorCodes } from "../types";
 import { generateSignedEmbedUrl } from "../utils/bunnyStream";
 
+import { isCourseAccessActive } from "../utils/courseAccess";
+
 const router = Router();
 
 // ─── GET /videos/:id/stream ───────────────────────────────────────────────────
@@ -15,7 +17,7 @@ const router = Router();
  *
  * Checks:
  *  1. Valid token + session + device (middleware)
- *  2. Subscription active
+ *  2. Subscription active & per-course access active
  *  3. Student is enrolled in the video's parent course
  *  4. Video status is "ready" (finished encoding)
  *
@@ -27,24 +29,6 @@ router.get(
   verifySession,
   verifyDevice,
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const userDoc = req.userDoc!;
-
-    if (!userDoc.subscriptionActive) {
-      res.status(403).json({
-        code: ErrorCodes.SUBSCRIPTION_INACTIVE,
-        message: "Your subscription is not active. Please contact your instructor.",
-      });
-      return;
-    }
-
-    if (userDoc.subscriptionExpiry && userDoc.subscriptionExpiry.toDate() < new Date()) {
-      res.status(403).json({
-        code: ErrorCodes.SUBSCRIPTION_INACTIVE,
-        message: "Your subscription has expired. Please contact your instructor.",
-      });
-      return;
-    }
-
     const videoId = req.params.id;
     const { courseId, playlistId } = req.query as { courseId?: string; playlistId?: string };
 
@@ -56,11 +40,11 @@ router.get(
       return;
     }
 
-    // Enrollment check BEFORE fetching the video doc — fail fast, no unnecessary reads
-    if (!userDoc.enrolledCourses.includes(courseId)) {
+    const accessCheck = isCourseAccessActive(req.userDoc!, courseId);
+    if (!accessCheck.active) {
       res.status(403).json({
         code: ErrorCodes.NOT_ENROLLED,
-        message: "You are not enrolled in this course.",
+        message: accessCheck.reason || "You do not have access to this course.",
       });
       return;
     }

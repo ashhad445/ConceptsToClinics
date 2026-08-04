@@ -49,6 +49,7 @@ export const createCourse = async (data: {
   description: string;
   thumbnail: string;
   order: number;
+  durationDays?: number;
 }): Promise<Course> => {
   const res = await apiClient.post('/admin/courses', data);
   return res.data;
@@ -56,7 +57,7 @@ export const createCourse = async (data: {
 
 export const updateCourse = async (
   id: string,
-  data: Partial<{ title: string; description: string; thumbnail: string; order: number; isPublished: boolean }>
+  data: Partial<{ title: string; description: string; thumbnail: string; order: number; isPublished: boolean; durationDays?: number }>
 ): Promise<void> => {
   await apiClient.put(`/admin/courses/${id}`, data);
 };
