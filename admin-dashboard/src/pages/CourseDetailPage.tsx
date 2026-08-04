@@ -701,7 +701,6 @@ const CourseDetailPage: React.FC = () => {
                             <th>Title</th>
                             <th>Duration</th>
                             <th>Status</th>
-                            <th>Preview</th>
                             <th style={{ width: 100 }}>Order</th>
                             <th style={{ width: 120 }}>Actions</th>
                           </tr>
@@ -725,11 +724,6 @@ const CourseDetailPage: React.FC = () => {
                                   {v.status === 'failed' && <span className="badge badge-danger">Failed</span>}
                                   {v.status === 'uploading' && <span className="badge badge-info">Uploading...</span>}
                                   {!v.status && <span className="badge badge-success">Ready</span>}
-                                </td>
-                                <td>
-                                  {v.isFreePreview
-                                    ? <span className="badge badge-success">Free</span>
-                                    : <span className="badge">Paid</span>}
                                 </td>
                               <td>
                                 <div className="flex items-center gap-1">
@@ -959,21 +953,9 @@ const CourseDetailPage: React.FC = () => {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div className="form-group">
-              <label className="form-label">Order</label>
-              <input type="number" className="form-input" min={1} value={videoForm.order} onChange={(e) => setVideoForm({ ...videoForm, order: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Free Preview?</label>
-              <div className="toggle-wrap" style={{ paddingTop: 10 }}>
-                <div
-                  className={`toggle${videoForm.isFreePreview ? ' on' : ''}`}
-                  onClick={() => setVideoForm({ ...videoForm, isFreePreview: !videoForm.isFreePreview })}
-                />
-                <span className="toggle-label">{videoForm.isFreePreview ? 'Yes — visible to all' : 'No — enrolled only'}</span>
-              </div>
-            </div>
+          <div className="form-group">
+            <label className="form-label">Order</label>
+            <input type="number" className="form-input" min={1} value={videoForm.order} onChange={(e) => setVideoForm({ ...videoForm, order: e.target.value })} />
           </div>
         </div>
         <div className="modal-footer">
