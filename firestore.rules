@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Lock down everything by default ─────────────────────────────────────
+    // All reads and writes come through Firebase Functions (Admin SDK),
+    // which bypass these rules entirely.
+    // Direct client SDK access is DENIED for all security-sensitive operations.
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

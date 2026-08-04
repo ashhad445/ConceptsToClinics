@@ -1,0 +1,21 @@
+# ─── Root .gitignore ──────────────────────────────────────────────────────────
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+ui-debug.log
+.firebaserc.local
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
