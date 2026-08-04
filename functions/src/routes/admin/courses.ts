@@ -4,7 +4,7 @@ import { db, admin } from "../../config/firebase";
 import { verifyToken } from "../../middleware/verifyToken";
 import { verifyAdmin } from "../../middleware/verifyAdmin";
 import { AuthenticatedRequest, CourseDoc, PlaylistDoc, VideoDoc, ErrorCodes } from "../../types";
-import { createBunnyVideo, uploadBunnyVideo, deleteBunnyVideo } from "../../utils/bunnyStream";
+import { createBunnyVideo, uploadBunnyVideo, deleteBunnyVideo, getBunnyVideoMetadata } from "../../utils/bunnyStream";
 
 const router = Router();
 
@@ -387,21 +387,52 @@ router.get(
         .orderBy("order")
         .get();
 
-      const videos = videosSnap.docs.map((doc) => {
-        const data = doc.data() as VideoDoc;
-        return {
-          id: doc.id,
-          title: data.title,
-          description: data.description,
-          bunnyVideoGuid: data.bunnyVideoGuid || "",
-          status: data.status || "ready",
-          duration: data.duration || 0,
-          order: data.order,
-          isFreePreview: data.isFreePreview,
-          uploadedAt: data.uploadedAt || data.createdAt,
-          createdAt: data.createdAt,
-        };
-      });
+      const videos = await Promise.all(
+        videosSnap.docs.map(async (doc) => {
+          const data = doc.data() as VideoDoc;
+          let currentStatus = data.status || "ready";
+          let duration = data.duration || 0;
+
+          // If status is uploading or processing, verify status with Bunny Stream
+          if ((currentStatus === "uploading" || currentStatus === "processing") && data.bunnyVideoGuid) {
+            try {
+              const meta = await getBunnyVideoMetadata(data.bunnyVideoGuid);
+              if (meta.status === 4 || meta.length > 0) {
+                currentStatus = "ready";
+                duration = Math.round(meta.length || 0);
+                doc.ref.update({ status: "ready", duration }).catch(() => {});
+              } else if (meta.status === 5) {
+                currentStatus = "failed";
+                doc.ref.update({ status: "failed" }).catch(() => {});
+              } else {
+                // If Bunny has received the video (status 3 / encoding), mark as processing
+                currentStatus = "processing";
+                doc.ref.update({ status: "processing" }).catch(() => {});
+              }
+            } catch (metaErr) {
+              // Fallback to ready if created > 2 minutes ago
+              const createdAt = data.createdAt ? (data.createdAt as any).toDate?.() || new Date(data.createdAt as any) : new Date();
+              if (Date.now() - new Date(createdAt).getTime() > 120000) {
+                currentStatus = "ready";
+                doc.ref.update({ status: "ready" }).catch(() => {});
+              }
+            }
+          }
+
+          return {
+            id: doc.id,
+            title: data.title,
+            description: data.description,
+            bunnyVideoGuid: data.bunnyVideoGuid || "",
+            status: currentStatus,
+            duration: duration,
+            order: data.order,
+            isFreePreview: data.isFreePreview,
+            uploadedAt: data.uploadedAt || data.createdAt,
+            createdAt: data.createdAt,
+          };
+        })
+      );
 
       res.status(200).json({ videos });
     } catch (error) {
@@ -412,6 +443,76 @@ router.get(
       res.status(500).json({
         code: ErrorCodes.INTERNAL_ERROR,
         message: "Failed to fetch videos.",
+      });
+    }
+  }
+);
+
+// ─── POST /admin/courses/:id/playlists/:playlistId/videos/:videoId/complete-upload ───
+
+/**
+ * Notifies server that browser direct upload finished.
+ * Verifies video metadata with Bunny Stream and updates Firestore status to 'ready'.
+ */
+router.post(
+  "/:id/playlists/:playlistId/videos/:videoId/complete-upload",
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const { id: courseId, playlistId, videoId } = req.params;
+
+    try {
+      const videoRef = db
+        .collection("courses")
+        .doc(courseId)
+        .collection("playlists")
+        .doc(playlistId)
+        .collection("videos")
+        .doc(videoId);
+
+      const videoSnap = await videoRef.get();
+      if (!videoSnap.exists) {
+        res.status(404).json({
+          code: ErrorCodes.NOT_FOUND,
+          message: "Video not found.",
+        });
+        return;
+      }
+
+      const data = videoSnap.data() as VideoDoc;
+      let newStatus = "ready";
+      let duration = data.duration || 0;
+
+      if (data.bunnyVideoGuid) {
+        try {
+          const meta = await getBunnyVideoMetadata(data.bunnyVideoGuid);
+          if (meta.length) {
+            duration = Math.round(meta.length);
+          }
+          if (meta.status === 5) {
+            newStatus = "failed";
+          }
+        } catch (err) {
+          console.warn(`[complete-upload] Metadata fetch warning for ${data.bunnyVideoGuid}:`, err);
+        }
+      }
+
+      await videoRef.update({
+        status: newStatus,
+        duration,
+      });
+
+      res.status(200).json({
+        message: "Video upload marked complete.",
+        status: newStatus,
+        duration,
+      });
+    } catch (error) {
+      console.error(
+        `[admin/courses POST /${courseId}/playlists/${playlistId}/videos/${videoId}/complete-upload] Error:`,
+        error
+      );
+      res.status(500).json({
+        code: ErrorCodes.INTERNAL_ERROR,
+        message: "Failed to complete upload.",
       });
     }
   }

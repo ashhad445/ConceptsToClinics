@@ -127,6 +127,16 @@ export const uploadVideoDirectToBunny = async (
   });
 };
 
+export const completeDirectUpload = async (
+  courseId: string,
+  playlistId: string,
+  videoId: string
+): Promise<void> => {
+  await apiClient.post(
+    `/admin/courses/${courseId}/playlists/${playlistId}/videos/${videoId}/complete-upload`
+  );
+};
+
 export const uploadVideo = async (
   courseId: string,
   playlistId: string,

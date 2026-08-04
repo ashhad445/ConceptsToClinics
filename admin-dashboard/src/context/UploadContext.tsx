@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, type ReactNode } from 'react';
-import { initiateDirectUpload, uploadVideoDirectToBunny, type Video } from '../api/courses';
+import { initiateDirectUpload, uploadVideoDirectToBunny, completeDirectUpload, type Video } from '../api/courses';
 import toast from 'react-hot-toast';
 
 export interface UploadTask {
@@ -94,6 +94,13 @@ export const UploadProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           prev.map((t) => (t.id === taskId ? { ...t, progress: percent } : t))
         );
       });
+
+      // Step 3: Notify backend that upload completed so Firestore status flips from 'uploading' -> 'ready'
+      try {
+        await completeDirectUpload(courseId, playlistId, initRes.videoId);
+      } catch (completeErr) {
+        console.warn(`[UploadContext] Warning: completeDirectUpload notice failed:`, completeErr);
+      }
 
       setTasks((prev) =>
         prev.map((t) => (t.id === taskId ? { ...t, status: 'completed', progress: 100 } : t))
