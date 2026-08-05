@@ -8,6 +8,7 @@ import videosRouter from "./routes/videos";
 import progressRouter from "./routes/progress";
 import adminRouter from "./routes/admin";
 import webhooksRouter from "./routes/webhooks";
+import { publicConfigRouter } from "./routes/config";
 
 // Load .env for local development (no-op in production)
 dotenv.config();
@@ -24,6 +25,9 @@ app.use(express.json());
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// Public version & system config
+app.use("/config", publicConfigRouter);
 
 // ─── Route Stubs (to be filled in Phase 2 onwards) ───────────────────────────
 
