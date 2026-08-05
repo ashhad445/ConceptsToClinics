@@ -5,14 +5,24 @@ import Modal from '../components/Modal';
 import { ImageUploadInput } from '../components/ImageUploadInput';
 import { getCourses, createCourse } from '../api/courses';
 import type { Course } from '../api/courses';
+import { getPublicVersionConfig, updateVersionConfig } from '../api/config';
+import type { VersionConfig } from '../api/config';
 import toast from 'react-hot-toast';
-import { RiAddLine, RiBookOpenLine } from 'react-icons/ri';
+import { RiAddLine, RiBookOpenLine, RiSmartphoneLine } from 'react-icons/ri';
 
 const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [createModal, setCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [versionModal, setVersionModal] = useState(false);
+  const [updatingVersion, setUpdatingVersion] = useState(false);
+  const [versionForm, setVersionForm] = useState<VersionConfig>({
+    minRequiredVersion: '1.0.0',
+    latestVersion: '1.0.0',
+    downloadUrl: 'https://play.google.com/store/apps/details?id=com.conceptstoclinics.app',
+    message: 'A required update for Concepts To Clinics is available. Please update the app to continue.',
+  });
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ title: '', description: '', thumbnail: '', order: '1', durationDays: '365' });
@@ -29,6 +39,29 @@ const CoursesPage: React.FC = () => {
     };
     load();
   }, []);
+
+  const openVersionModal = async () => {
+    try {
+      const cfg = await getPublicVersionConfig();
+      setVersionForm(cfg);
+      setVersionModal(true);
+    } catch {
+      toast.error('Failed to load version configuration.');
+    }
+  };
+
+  const handleUpdateVersion = async () => {
+    setUpdatingVersion(true);
+    try {
+      await updateVersionConfig(versionForm);
+      toast.success('App Version settings updated!');
+      setVersionModal(false);
+    } catch {
+      toast.error('Failed to update app version settings.');
+    } finally {
+      setUpdatingVersion(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!form.title || !form.description || !form.thumbnail) {
@@ -54,9 +87,14 @@ const CoursesPage: React.FC = () => {
       title="Courses"
       badge={`${courses.length} courses`}
       actions={
-        <button className="btn btn-primary" onClick={() => setCreateModal(true)}>
-          <RiAddLine /> New Course
-        </button>
+        <div className="flex gap-2">
+          <button className="btn btn-secondary" onClick={openVersionModal}>
+            <RiSmartphoneLine /> App Version Control
+          </button>
+          <button className="btn btn-primary" onClick={() => setCreateModal(true)}>
+            <RiAddLine /> New Course
+          </button>
+        </div>
       }
     >
       {loading ? (
@@ -134,6 +172,68 @@ const CoursesPage: React.FC = () => {
           <button className="btn btn-secondary" onClick={() => setCreateModal(false)}>Cancel</button>
           <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
             {creating ? <span className="spinner-sm spinner" /> : 'Create Course'}
+          </button>
+        </div>
+      </Modal>
+
+      {/* App Version Control Modal */}
+      <Modal
+        isOpen={versionModal}
+        onClose={() => setVersionModal(false)}
+        title="Mobile App Version Control"
+        subtitle="Enforce minimum required app version for all students."
+        size="md"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="form-group">
+            <label className="form-label">Minimum Required App Version</label>
+            <input
+              className="form-input"
+              placeholder="e.g. 1.0.1"
+              value={versionForm.minRequiredVersion}
+              onChange={(e) => setVersionForm({ ...versionForm, minRequiredVersion: e.target.value })}
+            />
+            <span className="text-xs text-muted mt-1">
+              Students running a version lower than this will be hard-gated with a non-dismissible Update screen.
+            </span>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Latest Version</label>
+            <input
+              className="form-input"
+              placeholder="e.g. 1.0.1"
+              value={versionForm.latestVersion}
+              onChange={(e) => setVersionForm({ ...versionForm, latestVersion: e.target.value })}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Update Download URL</label>
+            <input
+              className="form-input"
+              placeholder="Google Play or direct APK download link"
+              value={versionForm.downloadUrl}
+              onChange={(e) => setVersionForm({ ...versionForm, downloadUrl: e.target.value })}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Update Prompt Message</label>
+            <textarea
+              className="form-input"
+              rows={3}
+              placeholder="Message shown to students on the update screen..."
+              value={versionForm.message}
+              onChange={(e) => setVersionForm({ ...versionForm, message: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={() => setVersionModal(false)}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleUpdateVersion} disabled={updatingVersion}>
+            {updatingVersion ? <span className="spinner-sm spinner" /> : 'Save Version Settings'}
           </button>
         </div>
       </Modal>
