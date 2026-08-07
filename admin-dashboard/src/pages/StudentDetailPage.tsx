@@ -231,25 +231,25 @@ const StudentDetailPage: React.FC = () => {
         <div className="detail-section">
 
           {/* Profile Card */}
-          <div className="card">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="avatar" style={{ width: 52, height: 52, fontSize: 20 }}>
+          <div className="card card-compact">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="avatar" style={{ width: 44, height: 44, fontSize: 18 }}>
                 {student.displayName?.[0]?.toUpperCase()}
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 17 }}>{student.displayName}</div>
-                <div className="text-muted text-sm">{student.email}</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{student.displayName}</div>
+                <div className="text-muted text-xs">{student.email}</div>
                 {student.studentId && (
                   <code style={{
                     display: 'inline-block',
-                    marginTop: 4,
-                    fontSize: 12,
+                    marginTop: 2,
+                    fontSize: 11,
                     fontFamily: 'monospace',
                     background: 'var(--bg-elevated)',
-                    padding: '2px 8px',
+                    padding: '2px 6px',
                     borderRadius: 6,
                     color: 'var(--accent)',
-                    letterSpacing: 1,
+                    letterSpacing: 0.5,
                     fontWeight: 700,
                   }}>
                     {student.studentId}
@@ -257,59 +257,59 @@ const StudentDetailPage: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="divider" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div className="info-row">
+            <div className="divider" style={{ margin: '12px 0' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="info-row info-row-compact">
                 <div className="info-label">Joined</div>
-                <div className="info-value">
+                <div className="info-value text-xs">
                   {student.createdAt?._seconds
                     ? format(new Date(student.createdAt._seconds * 1000), 'dd MMM yyyy')
                     : '—'}
                 </div>
               </div>
-              <div className="info-row">
-                <div className="info-label">Signup Code Used</div>
+              <div className="info-row info-row-compact">
+                <div className="info-label">Signup Code</div>
                 <div className="info-value">
-                  <code style={{ fontSize: 13, background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: 4, color: 'var(--accent)' }}>
+                  <code style={{ fontSize: 12, background: 'var(--bg-elevated)', padding: '2px 6px', borderRadius: 4, color: 'var(--accent)' }}>
                     {student.signupCodeUsed}
                   </code>
                 </div>
               </div>
-              <div className="info-row">
+              <div className="info-row info-row-compact">
                 <div className="info-label">Student ID</div>
-                <div className="info-value text-sm text-muted" style={{ wordBreak: 'break-all' }}>{student.id}</div>
+                <div className="info-value text-xs text-muted" style={{ wordBreak: 'break-all' }}>{student.id}</div>
               </div>
             </div>
           </div>
 
           {/* Device Card */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="section-title" style={{ marginBottom: 0 }}>Registered Device</div>
+          <div className="card card-compact">
+            <div className="flex items-center justify-between mb-3">
+              <div className="section-title" style={{ marginBottom: 0, fontSize: 14 }}>Registered Device</div>
               {student.deviceStatus === 'locked'
-                ? <span className="badge badge-danger badge-dot">Locked</span>
-                : <span className="badge badge-success badge-dot">Active</span>}
+                ? <span className="badge badge-danger badge-dot" style={{ fontSize: 11 }}>Locked</span>
+                : <span className="badge badge-success badge-dot" style={{ fontSize: 11 }}>Active</span>}
             </div>
-            <div className="info-row">
+            <div className="info-row info-row-compact">
               <div className="info-label">Device ID</div>
-              <div className="info-value text-sm" style={{ wordBreak: 'break-all', color: 'var(--text-secondary)' }}>
+              <div className="info-value text-xs" style={{ wordBreak: 'break-all', color: 'var(--text-secondary)' }}>
                 {student.registeredDeviceId ?? 'Not bound yet'}
               </div>
             </div>
             {student.registeredDeviceName && (
-              <div className="info-row">
+              <div className="info-row info-row-compact">
                 <div className="info-label">Device Model</div>
-                <div className="info-value text-sm">{student.registeredDeviceName}</div>
+                <div className="info-value text-xs">{student.registeredDeviceName}</div>
               </div>
             )}
             {student.registeredDeviceFriendlyName && (
-              <div className="info-row mb-4">
+              <div className="info-row info-row-compact mb-2">
                 <div className="info-label">Friendly Name</div>
-                <div className="info-value text-sm">{student.registeredDeviceFriendlyName}</div>
+                <div className="info-value text-xs">{student.registeredDeviceFriendlyName}</div>
               </div>
             )}
             <button
-              className="btn btn-danger"
+              className="btn btn-danger btn-sm mt-2"
               style={{ width: '100%', justifyContent: 'center' }}
               onClick={() => setResetConfirm(true)}
               disabled={!student.registeredDeviceId}
@@ -318,36 +318,36 @@ const StudentDetailPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Unauthorized Attempt Card — only shown when an attempt was recorded */}
+          {/* Unauthorized Attempt Card */}
           {student.attemptedDeviceId && (
-            <div className="card" style={{ borderLeft: '3px solid var(--danger)' }}>
-              <div className="flex items-center gap-2 mb-4">
+            <div className="card card-compact" style={{ borderLeft: '3px solid var(--danger)' }}>
+              <div className="flex items-center gap-2 mb-3">
                 <span style={{
-                  width: 10, height: 10, borderRadius: '50%',
+                  width: 8, height: 8, borderRadius: '50%',
                   backgroundColor: 'var(--danger)', display: 'inline-block', flexShrink: 0
                 }} />
-                <div className="section-title" style={{ marginBottom: 0, color: 'var(--danger)' }}>
+                <div className="section-title" style={{ marginBottom: 0, fontSize: 14, color: 'var(--danger)' }}>
                   Unauthorized Login Attempt
                 </div>
               </div>
-              <div className="info-row">
+              <div className="info-row info-row-compact">
                 <div className="info-label">Device Model</div>
-                <div className="info-value text-sm">{student.attemptedDeviceName ?? '—'}</div>
+                <div className="info-value text-xs">{student.attemptedDeviceName ?? '—'}</div>
               </div>
-              <div className="info-row">
+              <div className="info-row info-row-compact">
                 <div className="info-label">Friendly Name</div>
-                <div className="info-value text-sm">{student.attemptedDeviceFriendlyName ?? '—'}</div>
+                <div className="info-value text-xs">{student.attemptedDeviceFriendlyName ?? '—'}</div>
               </div>
-              <div className="info-row">
+              <div className="info-row info-row-compact">
                 <div className="info-label">Device ID</div>
-                <div className="info-value text-sm" style={{ wordBreak: 'break-all', color: 'var(--text-secondary)' }}>
+                <div className="info-value text-xs" style={{ wordBreak: 'break-all', color: 'var(--text-secondary)' }}>
                   {student.attemptedDeviceId}
                 </div>
               </div>
               {student.attemptedLoginAt && (
-                <div className="info-row">
+                <div className="info-row info-row-compact">
                   <div className="info-label">Attempted At</div>
-                  <div className="info-value text-sm">
+                  <div className="info-value text-xs">
                     {format(new Date(student.attemptedLoginAt._seconds * 1000), 'dd MMM yyyy, HH:mm')}
                   </div>
                 </div>
@@ -356,28 +356,29 @@ const StudentDetailPage: React.FC = () => {
           )}
 
           {/* Subscription Card */}
-          <div className="card">
-            <div className="section-title">Subscription</div>
-            <div className="toggle-wrap mb-4">
+          <div className="card card-compact">
+            <div className="section-title" style={{ marginBottom: 10, fontSize: 14 }}>Subscription</div>
+            <div className="toggle-wrap mb-3">
               <div
                 className={`toggle${student.subscriptionActive ? ' on' : ''}`}
                 onClick={handleToggleSubscription}
               />
-              <span className="toggle-label">
+              <span className="toggle-label text-sm">
                 {student.subscriptionActive ? 'Active' : 'Inactive'}
                 {isExpired && ' (Expired)'}
               </span>
             </div>
             <div className="form-group">
-              <label className="form-label">Expiry Date (optional)</label>
+              <label className="form-label text-xs">Expiry Date (optional)</label>
               <div className="flex gap-2">
                 <input
                   type="date"
-                  className="form-input"
+                  className="form-input text-xs"
+                  style={{ padding: '6px 10px' }}
                   value={subExpiry}
                   onChange={(e) => setSubExpiry(e.target.value)}
                 />
-                <button className="btn btn-primary" onClick={handleSaveExpiry} disabled={savingExpiry}>
+                <button className="btn btn-primary btn-sm" onClick={handleSaveExpiry} disabled={savingExpiry}>
                   {savingExpiry ? <span className="spinner-sm spinner" /> : 'Save'}
                 </button>
               </div>
@@ -389,9 +390,9 @@ const StudentDetailPage: React.FC = () => {
         <div className="detail-section">
 
           {/* Enrolled Courses */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="section-title" style={{ marginBottom: 0 }}>
+          <div className="card card-compact">
+            <div className="flex items-center justify-between mb-3">
+              <div className="section-title" style={{ marginBottom: 0, fontSize: 14 }}>
                 Enrolled Courses ({student.enrolledCourses.length})
               </div>
               <button className="btn btn-primary btn-sm" onClick={() => setAddCourseModal(true)}>
@@ -400,11 +401,11 @@ const StudentDetailPage: React.FC = () => {
             </div>
 
             {student.enrolledCourses.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
+              <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)', fontSize: 13 }}>
                 No courses enrolled yet.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {student.enrolledCourses.map((courseId) => {
                   const course = getCourseById(courseId);
                   const { completed, total, pct } = getProgressForCourse(courseId);
@@ -413,20 +414,21 @@ const StudentDetailPage: React.FC = () => {
                   return (
                     <div key={courseId} style={{
                       background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)',
-                      padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8,
+                      padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6,
                       border: isCourseAccessExpired ? '1px solid var(--danger)' : '1px solid var(--border-subtle)',
                     }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div style={{ fontWeight: 600 }}>{course?.title ?? courseId}</div>
-                          {isCourseAccessExpired && <span className="badge badge-danger">Expired</span>}
+                          <div style={{ fontWeight: 600, fontSize: 13.5 }}>{course?.title ?? courseId}</div>
+                          {isCourseAccessExpired && <span className="badge badge-danger" style={{ fontSize: 10 }}>Expired</span>}
                         </div>
                         <button
                           className="btn-icon btn"
+                          style={{ width: 28, height: 28 }}
                           onClick={() => handleRemoveCourse(courseId)}
                           title="Remove course"
                         >
-                          <RiDeleteBinLine style={{ color: 'var(--danger)', fontSize: 14 }} />
+                          <RiDeleteBinLine style={{ color: 'var(--danger)', fontSize: 13 }} />
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
@@ -436,17 +438,17 @@ const StudentDetailPage: React.FC = () => {
                             style={{ width: `${pct}%` }}
                           />
                         </div>
-                        <span className="text-sm text-muted">{completed}/{total} videos · {pct}%</span>
+                        <span className="text-xs text-muted">{completed}/{total} videos · {pct}%</span>
                       </div>
                       {/* Course Specific Access Expiry Date Input */}
-                      <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                      <div className="flex items-center justify-between mt-1 pt-1" style={{ borderTop: '1px solid var(--border-subtle)' }}>
                         <span className="text-xs text-muted" style={{ fontWeight: 500 }}>
                           Access Expiry Date:
                         </span>
                         <input
                           type="date"
                           className="form-input text-xs"
-                          style={{ width: 140, padding: '2px 6px', height: 28 }}
+                          style={{ width: 130, padding: '2px 6px', height: 26 }}
                           value={currentCourseExp}
                           onChange={(e) => handleSaveCourseExpiry(courseId, e.target.value)}
                         />
@@ -460,9 +462,11 @@ const StudentDetailPage: React.FC = () => {
 
           {/* Progress Detail */}
           {progress.length > 0 && (
-            <div className="card">
-              <div className="section-title">Video Progress Detail</div>
-              <div className="table-container">
+            <div className="card card-compact">
+              <div className="section-title" style={{ marginBottom: 12, fontSize: 14 }}>
+                Video Progress Detail ({progress.length})
+              </div>
+              <div className="table-container table-scrollable">
                 <table className="table">
                   <thead>
                     <tr>
@@ -477,26 +481,26 @@ const StudentDetailPage: React.FC = () => {
                   <tbody>
                     {progress.map((p) => (
                       <tr key={p.videoId}>
-                        <td className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                        <td className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                           {p.videoId.slice(0, 10)}…
                         </td>
-                        <td className="text-sm">{getCourseById(p.courseId)?.title ?? p.courseId.slice(0, 8)}</td>
-                        <td className="text-sm text-muted">{p.playlistId ? p.playlistId.slice(0, 8) + '…' : '—'}</td>
+                        <td className="text-xs font-semibold">{getCourseById(p.courseId)?.title ?? p.courseId.slice(0, 8)}</td>
+                        <td className="text-xs text-muted">{p.playlistId ? p.playlistId.slice(0, 8) + '…' : '—'}</td>
                         <td>
                           <div className="flex items-center gap-2">
-                            <div className="progress-bar-wrap" style={{ width: 80 }}>
+                            <div className="progress-bar-wrap" style={{ width: 70 }}>
                               <div className={`progress-bar-fill${p.isCompleted ? ' complete' : ''}`}
                                 style={{ width: `${p.percentComplete}%` }} />
                             </div>
-                            <span className="text-sm text-muted">{Math.round(p.percentComplete)}%</span>
+                            <span className="text-xs text-muted">{Math.round(p.percentComplete)}%</span>
                           </div>
                         </td>
                         <td>
                           {p.isCompleted
-                            ? <span className="badge badge-success">Completed</span>
-                            : <span className="badge badge-neutral">In Progress</span>}
+                            ? <span className="badge badge-success" style={{ fontSize: 10 }}>Completed</span>
+                            : <span className="badge badge-neutral" style={{ fontSize: 10 }}>In Progress</span>}
                         </td>
-                        <td className="text-sm text-muted">
+                        <td className="text-xs text-muted">
                           {p.lastWatchedAt?._seconds
                             ? formatDistanceToNow(new Date(p.lastWatchedAt._seconds * 1000), { addSuffix: true })
                             : '—'}
