@@ -228,7 +228,7 @@ img { display: block; max-width: 100%; }
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
 }
 .topbar-title, .page-title {
@@ -1148,7 +1148,7 @@ img { display: block; max-width: 100%; }
     display: none !important;
   }
   .topbar-actions {
-    gap: 4px !important;
+    gap: 8px !important;
     flex-shrink: 0 !important;
   }
   .btn-header-action {

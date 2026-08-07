@@ -217,7 +217,7 @@ const StudentDetailPage: React.FC = () => {
 
   return (
     <Layout title="Student Detail" actions={
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2.5">
         <button className="btn btn-danger btn-header-action" onClick={() => setDeleteConfirm(true)}>
           <RiDeleteBinLine className="btn-action-icon" />
           <span>Delete<span className="hide-mobile-sm"> Account</span></span>

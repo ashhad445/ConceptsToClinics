@@ -87,7 +87,7 @@ const CoursesPage: React.FC = () => {
       title="Courses"
       badge={`${courses.length} courses`}
       actions={
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2.5">
           <button className="btn btn-secondary btn-header-action" onClick={openVersionModal}>
             <RiSmartphoneLine className="btn-action-icon" />
             <span>App Version<span className="hide-mobile-sm"> Control</span></span>
