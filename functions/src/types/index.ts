@@ -73,8 +73,10 @@ export interface SignupCodeDoc {
 
 export interface ProgressDoc {
   videoId: string;
+  videoTitle?: string;
   courseId: string;
   playlistId?: string; // optional — populated for videos added after playlist refactor
+  playlistTitle?: string;
   watchedSeconds: number;
   totalSeconds: number;
   percentComplete: number; // 0–100

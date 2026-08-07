@@ -117,21 +117,84 @@ router.get(
         .collection("progress")
         .get();
 
-      const progress = progressSnap.docs.map((doc) => {
-        const pData = doc.data() as ProgressDoc;
-        return {
-          id: doc.id,
-          videoId: pData.videoId,
-          courseId: pData.courseId,
-          playlistId: pData.playlistId || null,
-          watchedSeconds: pData.watchedSeconds || 0,
-          totalSeconds: pData.totalSeconds || 0,
-          percentComplete: pData.percentComplete || 0,
-          isCompleted: pData.isCompleted || false,
-          lastWatchedAt: pData.lastWatchedAt,
-          firstWatchedAt: pData.firstWatchedAt,
-        };
-      });
+      const playlistCache: Record<string, string> = {};
+      const videoCache: Record<string, string> = {};
+
+      const progress = await Promise.all(
+        progressSnap.docs.map(async (doc) => {
+          const pData = doc.data() as ProgressDoc;
+          let playlistTitle = pData.playlistTitle || null;
+          let videoTitle = pData.videoTitle || null;
+
+          if (!playlistTitle && pData.courseId && pData.playlistId) {
+            const cacheKey = `${pData.courseId}_${pData.playlistId}`;
+            if (playlistCache[cacheKey]) {
+              playlistTitle = playlistCache[cacheKey];
+            } else {
+              try {
+                const plSnap = await db
+                  .collection("courses")
+                  .doc(pData.courseId)
+                  .collection("playlists")
+                  .doc(pData.playlistId)
+                  .get();
+                if (plSnap.exists) {
+                  playlistTitle = plSnap.data()?.title || null;
+                  if (playlistTitle) playlistCache[cacheKey] = playlistTitle;
+                }
+              } catch (e) {}
+            }
+          }
+
+          if (!videoTitle && pData.courseId && pData.videoId) {
+            const cacheKey = `${pData.courseId}_${pData.videoId}`;
+            if (videoCache[cacheKey]) {
+              videoTitle = videoCache[cacheKey];
+            } else {
+              try {
+                let vSnap;
+                if (pData.playlistId) {
+                  vSnap = await db
+                    .collection("courses")
+                    .doc(pData.courseId)
+                    .collection("playlists")
+                    .doc(pData.playlistId)
+                    .collection("videos")
+                    .doc(pData.videoId)
+                    .get();
+                }
+                if (!vSnap || !vSnap.exists) {
+                  vSnap = await db
+                    .collection("courses")
+                    .doc(pData.courseId)
+                    .collection("videos")
+                    .doc(pData.videoId)
+                    .get();
+                }
+                if (vSnap.exists) {
+                  videoTitle = vSnap.data()?.title || null;
+                  if (videoTitle) videoCache[cacheKey] = videoTitle;
+                }
+              } catch (e) {}
+            }
+          }
+
+          return {
+            id: doc.id,
+            videoId: pData.videoId,
+            videoTitle: videoTitle || null,
+            courseId: pData.courseId,
+            playlistId: pData.playlistId || null,
+            playlistTitle: playlistTitle || null,
+            watchedSeconds: pData.watchedSeconds || 0,
+            totalSeconds: pData.totalSeconds || 0,
+            percentComplete: pData.percentComplete || 0,
+            isCompleted: pData.isCompleted || false,
+            lastWatchedAt: pData.lastWatchedAt,
+            firstWatchedAt: pData.firstWatchedAt,
+          };
+        })
+      );
 
       res.status(200).json({
         student: {
