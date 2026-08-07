@@ -217,14 +217,14 @@ const StudentDetailPage: React.FC = () => {
 
   return (
     <Layout title="Student Detail" actions={
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <button className="btn btn-danger btn-header-action" onClick={() => setDeleteConfirm(true)}>
           <RiDeleteBinLine className="btn-action-icon" />
-          <span>Delete Account</span>
+          <span>Delete<span className="hide-mobile-sm"> Account</span></span>
         </button>
         <button className="btn btn-secondary btn-header-action" onClick={() => navigate('/students')}>
           <RiArrowLeftLine className="btn-action-icon" />
-          <span>Back to Students</span>
+          <span>Back<span className="hide-mobile-sm"> to Students</span></span>
         </button>
       </div>
     }>

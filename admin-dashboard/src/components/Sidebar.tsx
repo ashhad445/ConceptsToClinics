@@ -34,11 +34,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   return (
     <aside className={`sidebar${isOpen ? ' mobile-open' : ''}`}>
       <div className="sidebar-logo">
-        <div className="sidebar-logo-text" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.png" alt="ConceptsToClinics Logo" style={{ width: 26, height: 26, objectFit: 'contain' }} />
-          ConceptsToClinics
+        <div className="sidebar-logo-brand">
+          <img src="/logo.png" alt="ConceptsToClinics Logo" className="sidebar-logo-img" />
+          <div className="sidebar-logo-titles">
+            <div className="sidebar-logo-text">ConceptsToClinics</div>
+            <div className="sidebar-logo-sub">Admin Dashboard</div>
+          </div>
         </div>
-        <div className="sidebar-logo-sub">Admin Dashboard</div>
         <button
           className="sidebar-close-btn"
           onClick={onClose}

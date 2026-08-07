@@ -527,24 +527,25 @@ const CourseDetailPage: React.FC = () => {
       title={course.title}
       badge={course.isPublished ? 'Published' : 'Draft'}
       actions={
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/courses')}>
-          <RiArrowLeftLine /> Back to Courses
+        <button className="btn btn-secondary btn-header-action" onClick={() => navigate('/courses')}>
+          <RiArrowLeftLine className="btn-action-icon" />
+          <span>Back<span className="hide-mobile-sm"> to Courses</span></span>
         </button>
       }
     >
       {/* Course Info Card */}
-      <div className="card mb-6">
-        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24, alignItems: 'start' }}>
+      <div className="card mb-6 card-compact">
+        <div className="course-hero-grid">
           <img
             src={course.thumbnail}
             alt={course.title}
-            style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 'var(--radius-md)' }}
+            className="course-hero-img"
             onError={(e) => { (e.target as HTMLImageElement).src = `https://via.placeholder.com/200x120/E2E8F0/94A3B8?text=No+Image`; }}
           />
           <div>
-            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 6 }}>{course.title}</div>
-            <div className="text-muted text-sm" style={{ marginBottom: 14, lineHeight: 1.6 }}>{course.description}</div>
-            <div className="flex items-center gap-2" style={{ marginBottom: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>{course.title}</div>
+            <div className="text-muted text-sm" style={{ marginBottom: 12, lineHeight: 1.5 }}>{course.description}</div>
+            <div className="flex items-center gap-2 mb-3">
               <span className="badge badge-info">{course.totalPlaylists} playlist{course.totalPlaylists !== 1 ? 's' : ''}</span>
               <span className="badge badge-lavender">{course.totalVideos} video{course.totalVideos !== 1 ? 's' : ''}</span>
             </div>
@@ -569,7 +570,7 @@ const CourseDetailPage: React.FC = () => {
       </div>
 
       {/* Playlists Section Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-mobile-col">
         <div>
           <div className="page-title" style={{ fontSize: 17 }}>
             <RiPlayListLine style={{ marginRight: 8, verticalAlign: 'middle' }} />
@@ -578,11 +579,13 @@ const CourseDetailPage: React.FC = () => {
           <div className="page-subtitle">Manage playlists and their videos</div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="btn btn-secondary" onClick={openAttachModal}>
-            <RiFileCopyLine /> Attach Existing Playlist
+          <button className="btn btn-secondary btn-header-action" onClick={openAttachModal}>
+            <RiFileCopyLine className="btn-action-icon" />
+            <span>Attach<span className="hide-mobile-sm"> Existing</span> Playlist</span>
           </button>
-          <button className="btn btn-primary" onClick={openAddPlaylist}>
-            <RiAddLine /> Add Playlist
+          <button className="btn btn-primary btn-header-action" onClick={openAddPlaylist}>
+            <RiAddLine className="btn-action-icon" />
+            <span>Add Playlist</span>
           </button>
         </div>
       </div>
@@ -601,19 +604,12 @@ const CourseDetailPage: React.FC = () => {
 
               {/* Playlist Header Row */}
               <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '16px 20px',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  gap: 12,
-                }}
+                className="playlist-header-row"
                 onClick={() => togglePlaylist(pl.id)}
               >
                 {/* Order badge */}
                 <div style={{
-                  width: 28, height: 28, borderRadius: '50%',
+                  width: 26, height: 26, borderRadius: '50%',
                   background: 'var(--accent)', color: '#FFF',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 12, fontWeight: 700, flexShrink: 0,
@@ -622,20 +618,20 @@ const CourseDetailPage: React.FC = () => {
                 </div>
 
                 {/* Title + meta */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15 }}>{pl.title}</div>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{pl.title}</div>
                   {pl.description && (
-                    <div className="text-muted text-sm" style={{ marginTop: 2 }}>{pl.description}</div>
+                    <div className="text-muted text-xs" style={{ marginTop: 2 }}>{pl.description}</div>
                   )}
                 </div>
 
                 {/* Video count badge */}
-                <span className="badge badge-lavender" style={{ flexShrink: 0 }}>
+                <span className="badge badge-lavender" style={{ flexShrink: 0, fontSize: 11 }}>
                   {pl.totalVideos} video{pl.totalVideos !== 1 ? 's' : ''}
                 </span>
 
                 {/* Reorder buttons */}
-                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <div className="playlist-actions-group flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                   <button
                     className="btn btn-icon btn"
                     title="Move up"

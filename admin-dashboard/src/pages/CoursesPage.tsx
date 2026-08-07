@@ -87,12 +87,14 @@ const CoursesPage: React.FC = () => {
       title="Courses"
       badge={`${courses.length} courses`}
       actions={
-        <div className="flex gap-2">
-          <button className="btn btn-secondary" onClick={openVersionModal}>
-            <RiSmartphoneLine /> App Version Control
+        <div className="flex items-center gap-1.5">
+          <button className="btn btn-secondary btn-header-action" onClick={openVersionModal}>
+            <RiSmartphoneLine className="btn-action-icon" />
+            <span>App Version<span className="hide-mobile-sm"> Control</span></span>
           </button>
-          <button className="btn btn-primary" onClick={() => setCreateModal(true)}>
-            <RiAddLine /> New Course
+          <button className="btn btn-primary btn-header-action" onClick={() => setCreateModal(true)}>
+            <RiAddLine className="btn-action-icon" />
+            <span>New<span className="hide-mobile-sm"> Course</span></span>
           </button>
         </div>
       }
