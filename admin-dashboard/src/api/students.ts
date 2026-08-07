@@ -24,8 +24,10 @@ export interface Student {
 
 export interface ProgressDoc {
   videoId: string;
+  videoTitle?: string | null;
   courseId: string;
   playlistId?: string | null;
+  playlistTitle?: string | null;
   watchedSeconds: number;
   totalSeconds: number;
   percentComplete: number;

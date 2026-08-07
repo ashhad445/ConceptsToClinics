@@ -472,9 +472,9 @@ const StudentDetailPage: React.FC = () => {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Video ID</th>
+                      <th>Video Title</th>
                       <th>Course</th>
-                      <th>Playlist</th>
+                      <th>Section / Playlist</th>
                       <th>Progress</th>
                       <th>Status</th>
                       <th>Last Watched</th>
@@ -483,11 +483,13 @@ const StudentDetailPage: React.FC = () => {
                   <tbody>
                     {progress.map((p) => (
                       <tr key={p.videoId}>
-                        <td className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                          {p.videoId.slice(0, 10)}…
+                        <td className="text-xs font-semibold" style={{ color: 'var(--text-primary)', maxWidth: 180, wordBreak: 'break-word' }}>
+                          {p.videoTitle ?? p.videoId}
                         </td>
-                        <td className="text-xs font-semibold">{getCourseById(p.courseId)?.title ?? p.courseId.slice(0, 8)}</td>
-                        <td className="text-xs text-muted">{p.playlistId ? p.playlistId.slice(0, 8) + '…' : '—'}</td>
+                        <td className="text-xs">{getCourseById(p.courseId)?.title ?? p.courseId}</td>
+                        <td className="text-xs text-secondary" style={{ maxWidth: 140, wordBreak: 'break-word' }}>
+                          {p.playlistTitle ?? (p.playlistId ? p.playlistId : '—')}
+                        </td>
                         <td>
                           <div className="flex items-center gap-2">
                             <div className="progress-bar-wrap" style={{ width: 70 }}>
