@@ -42,6 +42,7 @@ export interface CourseDoc {
 export interface PlaylistDoc {
   title: string;
   description: string;
+  thumbnail: string;
   order: number;
   totalVideos: number; // number of videos in this playlist
   createdAt: FirebaseFirestore.Timestamp;

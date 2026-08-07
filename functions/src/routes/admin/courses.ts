@@ -177,6 +177,7 @@ router.get(
           id: doc.id,
           title: data.title,
           description: data.description,
+          thumbnail: data.thumbnail ?? "",
           order: data.order,
           totalVideos: data.totalVideos ?? 0,
           createdAt: data.createdAt,
@@ -198,13 +199,13 @@ router.get(
 
 /**
  * Creates a new playlist in a course and increments the course's totalPlaylists counter.
- * Body: { title, description, order }
+ * Body: { title, description, thumbnail, order }
  */
 router.post(
   "/:id/playlists",
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const courseId = req.params.id;
-    const { title, description, order } = req.body;
+    const { title, description, thumbnail, order } = req.body;
 
     if (!title || order == null) {
       res.status(400).json({
@@ -230,6 +231,7 @@ router.post(
       const playlistData: PlaylistDoc = {
         title: title.trim(),
         description: (description ?? "").trim(),
+        thumbnail: (thumbnail ?? "").trim(),
         order: Number(order),
         totalVideos: 0,
         createdAt: now as unknown as FirebaseFirestore.Timestamp,
@@ -314,6 +316,7 @@ router.post(
       const newPlaylistData: PlaylistDoc = {
         title: sourcePlaylistData.title,
         description: sourcePlaylistData.description,
+        thumbnail: sourcePlaylistData.thumbnail ?? "",
         order: Number(order),
         totalVideos: sourceVideos.length,
         createdAt: now as unknown as FirebaseFirestore.Timestamp,
@@ -374,11 +377,12 @@ router.put(
   "/:id/playlists/:playlistId",
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { id: courseId, playlistId } = req.params;
-    const { title, description, order } = req.body;
+    const { title, description, thumbnail, order } = req.body;
 
     const updates: Partial<Record<string, unknown>> = {};
     if (title !== undefined) updates.title = title.trim();
     if (description !== undefined) updates.description = description.trim();
+    if (thumbnail !== undefined) updates.thumbnail = thumbnail.trim();
     if (order !== undefined) updates.order = Number(order);
 
     if (Object.keys(updates).length === 0) {

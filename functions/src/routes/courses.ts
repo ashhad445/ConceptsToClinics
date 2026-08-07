@@ -183,6 +183,7 @@ router.get(
           id: doc.id,
           title: data.title,
           description: data.description,
+          thumbnail: data.thumbnail ?? "",
           order: data.order,
           totalVideos: data.totalVideos ?? 0,
           completedVideos,
