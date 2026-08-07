@@ -496,6 +496,29 @@ img { display: block; max-width: 100%; }
   border-radius: var(--radius-md);
 }
 
+/* ── Playlist Accordion Header ──────────────────────────────────────────────── */
+.playlist-header-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  cursor: pointer;
+  user-select: none;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+.playlist-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.playlist-actions-group .btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 14px;
+}
+
 /* ── Course Grid Cards ───────────────────────────────────────────────────────── */
 .course-card {
   background: var(--bg-surface);
@@ -1168,6 +1191,25 @@ img { display: block; max-width: 100%; }
   }
   .modal-footer {
     padding: 12px 20px;
+  }
+
+  /* Playlist Accordion Row Mobile */
+  .playlist-header-row {
+    padding: 12px 14px;
+    gap: 8px;
+    flex-wrap: nowrap !important;
+  }
+  .playlist-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .playlist-actions-group .btn-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 13px;
   }
 }
 

@@ -640,10 +640,10 @@ const CourseDetailPage: React.FC = () => {
                   {pl.totalVideos} video{pl.totalVideos !== 1 ? 's' : ''}
                 </span>
 
-                {/* Reorder buttons */}
-                <div className="playlist-actions-group flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                {/* Playlist Action Buttons — all in a single horizontal row */}
+                <div className="playlist-actions-group" onClick={(e) => e.stopPropagation()}>
                   <button
-                    className="btn btn-icon btn"
+                    className="btn btn-icon btn-sm"
                     title="Move up"
                     disabled={plIdx === 0}
                     onClick={() => handleReorderPlaylist(pl.id, 'up')}
@@ -651,26 +651,22 @@ const CourseDetailPage: React.FC = () => {
                     <RiArrowUpLine />
                   </button>
                   <button
-                    className="btn btn-icon btn"
+                    className="btn btn-icon btn-sm"
                     title="Move down"
                     disabled={plIdx === playlists.length - 1}
                     onClick={() => handleReorderPlaylist(pl.id, 'down')}
                   >
                     <RiArrowDownLine />
                   </button>
-                </div>
-
-                {/* Edit / Delete */}
-                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                   <button
-                    className="btn btn-icon btn"
+                    className="btn btn-icon btn-sm"
                     title="Edit playlist"
                     onClick={() => openEditPlaylist(pl)}
                   >
                     <RiEditLine />
                   </button>
                   <button
-                    className="btn btn-icon btn"
+                    className="btn btn-icon btn-sm"
                     title="Delete playlist"
                     onClick={() => setDeletePlaylistTarget(pl.id)}
                   >
@@ -679,7 +675,7 @@ const CourseDetailPage: React.FC = () => {
                 </div>
 
                 {/* Expand arrow */}
-                <div style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
+                <div style={{ color: 'var(--text-muted)', flexShrink: 0, fontSize: 18, display: 'flex', alignItems: 'center' }}>
                   {pl.expanded ? <RiArrowUpSLine /> : <RiArrowDownSLine />}
                 </div>
               </div>
