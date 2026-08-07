@@ -1123,40 +1123,47 @@ img { display: block; max-width: 100%; }
 
   /* Topbar Mobile Layout */
   .topbar {
-    padding: 0 12px;
-    height: 54px;
-    gap: 6px;
+    padding: 0 8px !important;
+    height: 52px !important;
+    gap: 4px !important;
   }
   .topbar-left {
-    gap: 8px;
-    min-width: 0;
-    flex-shrink: 1;
+    gap: 4px !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
   }
   .topbar-title-group {
-    gap: 6px;
-    min-width: 0;
+    gap: 4px !important;
+    min-width: 0 !important;
   }
   .topbar-title {
-    font-size: 15px;
-    font-weight: 800;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 13.5px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 95px !important;
   }
   .topbar-badge {
     display: none !important;
   }
   .topbar-actions {
-    gap: 4px;
-    flex-shrink: 0;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
   }
   .btn-header-action {
-    padding: 5px 9px;
-    font-size: 11px;
-    gap: 4px;
+    padding: 3px 7px !important;
+    font-size: 10.5px !important;
+    height: 28px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    gap: 3px !important;
   }
   .btn-header-action .btn-action-icon {
-    font-size: 15px;
+    font-size: 12px !important;
+  }
+  .hide-mobile-sm {
+    display: none !important;
   }
 
   /* Main Page Content */
