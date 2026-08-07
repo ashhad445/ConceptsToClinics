@@ -98,7 +98,7 @@ const StudentsPage: React.FC = () => {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-mobile-col">
         <div className="filter-tabs">
           {(['all', 'active', 'locked', 'expired'] as Filter[]).map((f) => (
             <button key={f} className={`filter-tab${filter === f ? ' active' : ''}`} onClick={() => setFilter(f)}>

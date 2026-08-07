@@ -939,3 +939,210 @@ img { display: block; max-width: 100%; }
   background: var(--bg-base);
 }
 
+/* ── Topbar Flex Layout ──────────────────────────────────────────────────────── */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topbar-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Mobile Hamburger & Close Buttons ────────────────────────────────────────── */
+.mobile-menu-btn {
+  display: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.mobile-menu-btn:hover {
+  background: var(--border-subtle);
+}
+.sidebar-close-btn {
+  display: none;
+  background: var(--bg-elevated);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-left: auto;
+}
+.sidebar-backdrop {
+  display: none;
+}
+
+/* ── Responsive Media Queries (< 768px Tablet & Mobile) ─────────────────────── */
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: flex;
+  }
+  .sidebar-close-btn {
+    display: flex;
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Slide-out Sidebar Drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+  }
+
+  /* Topbar Mobile Layout */
+  .topbar {
+    padding: 0 16px;
+    height: 56px;
+    gap: 10px;
+  }
+  .topbar-title {
+    font-size: 17px;
+  }
+  .topbar-badge {
+    font-size: 11px;
+  }
+  .topbar-actions {
+    gap: 6px;
+  }
+  .topbar-actions .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  /* Main Page Content */
+  .page-content {
+    padding: 16px 14px;
+  }
+
+  /* Flex Rows & Search Inputs */
+  .flex-mobile-col {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .search-wrap {
+    width: 100%;
+  }
+  .filter-tabs {
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Touch-friendly Tables */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+  }
+  .data-table th, table.table th {
+    padding: 10px 12px;
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+  .data-table td, table.table td {
+    padding: 12px;
+    font-size: 12.5px;
+  }
+
+  /* Cards & Detail Grids */
+  .card {
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  /* Modals on Mobile */
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+  .modal-card {
+    max-width: 100%;
+    max-height: 85vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+  }
+  .modal-header {
+    padding: 16px 20px;
+  }
+  .modal-body {
+    padding: 16px 20px;
+  }
+  .modal-footer {
+    padding: 12px 20px;
+  }
+}
+
+/* ── Small Mobile Screens (< 480px) ─────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .topbar-title {
+    font-size: 15px;
+    max-width: 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .grid-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 14px 16px;
+  }
+  .stat-value {
+    font-size: 20px;
+  }
+  .login-card {
+    padding: 24px 20px;
+  }
+}
+
+

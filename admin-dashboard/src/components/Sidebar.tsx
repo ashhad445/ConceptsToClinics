@@ -6,9 +6,15 @@ import {
   RiKeyLine,
   RiBookOpenLine,
   RiLogoutBoxLine,
+  RiCloseLine,
 } from 'react-icons/ri';
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -16,34 +22,58 @@ const Sidebar: React.FC = () => {
   const email = user?.email ?? '';
 
   const handleLogout = async () => {
+    onClose?.();
     await logout();
     navigate('/login');
   };
 
+  const handleNavClick = () => {
+    onClose?.();
+  };
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${isOpen ? ' mobile-open' : ''}`}>
       <div className="sidebar-logo">
         <div className="sidebar-logo-text" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.png" alt="ConceptsToClinics Logo" style={{ width: 26, height: 26, objectFit: 'contain' }} />
           ConceptsToClinics
         </div>
         <div className="sidebar-logo-sub">Admin Dashboard</div>
+        <button
+          className="sidebar-close-btn"
+          onClick={onClose}
+          aria-label="Close sidebar"
+        >
+          <RiCloseLine />
+        </button>
       </div>
 
       <nav className="sidebar-nav">
         <div className="sidebar-section-label">Management</div>
 
-        <NavLink to="/students" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+        <NavLink
+          to="/students"
+          onClick={handleNavClick}
+          className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+        >
           <RiUserLine className="icon" />
           Students
         </NavLink>
 
-        <NavLink to="/codes" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+        <NavLink
+          to="/codes"
+          onClick={handleNavClick}
+          className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+        >
           <RiKeyLine className="icon" />
           Signup Codes
         </NavLink>
 
-        <NavLink to="/courses" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+        <NavLink
+          to="/courses"
+          onClick={handleNavClick}
+          className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+        >
           <RiBookOpenLine className="icon" />
           Courses
         </NavLink>
@@ -64,3 +94,4 @@ const Sidebar: React.FC = () => {
 };
 
 export default Sidebar;
+
