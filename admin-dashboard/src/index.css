@@ -213,6 +213,24 @@ img { display: block; max-width: 100%; }
   padding: 0 36px;
   box-shadow: var(--shadow-sm);
 }
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.topbar-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 .topbar-title, .page-title {
   font-size: 22px;
   font-weight: 800;
@@ -1105,22 +1123,40 @@ img { display: block; max-width: 100%; }
 
   /* Topbar Mobile Layout */
   .topbar {
-    padding: 0 16px;
-    height: 56px;
-    gap: 10px;
-  }
-  .topbar-title {
-    font-size: 17px;
-  }
-  .topbar-badge {
-    font-size: 11px;
-  }
-  .topbar-actions {
+    padding: 0 12px;
+    height: 54px;
     gap: 6px;
   }
-  .topbar-actions .btn {
-    padding: 6px 12px;
-    font-size: 12px;
+  .topbar-left {
+    gap: 8px;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .topbar-title-group {
+    gap: 6px;
+    min-width: 0;
+  }
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar-badge {
+    display: none !important;
+  }
+  .topbar-actions {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .btn-header-action {
+    padding: 5px 9px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .btn-header-action .btn-action-icon {
+    font-size: 15px;
   }
 
   /* Main Page Content */
@@ -1219,6 +1255,13 @@ img { display: block; max-width: 100%; }
     height: 28px;
     padding: 0;
     font-size: 13px;
+  }
+}
+
+/* ── Mobile Screens (< 640px) ───────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .hide-mobile-sm {
+    display: none !important;
   }
 }
 
