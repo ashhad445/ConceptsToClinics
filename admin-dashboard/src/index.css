@@ -1169,6 +1169,15 @@ img { display: block; max-width: 100%; }
     align-items: flex-start;
     gap: 10px;
   }
+  .course-hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .course-hero-img {
+    width: 100% !important;
+    height: 180px !important;
+    object-fit: cover !important;
+  }
 
   /* Modals on Mobile */
   .modal-overlay {

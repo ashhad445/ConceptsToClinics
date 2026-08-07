@@ -545,11 +545,11 @@ const CourseDetailPage: React.FC = () => {
           <div>
             <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>{course.title}</div>
             <div className="text-muted text-sm" style={{ marginBottom: 12, lineHeight: 1.5 }}>{course.description}</div>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span className="badge badge-info">{course.totalPlaylists} playlist{course.totalPlaylists !== 1 ? 's' : ''}</span>
               <span className="badge badge-lavender">{course.totalVideos} video{course.totalVideos !== 1 ? 's' : ''}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button className="btn btn-secondary btn-sm" onClick={() => setEditCourseModal(true)}>
                 <RiEditLine /> Edit Details
               </button>
