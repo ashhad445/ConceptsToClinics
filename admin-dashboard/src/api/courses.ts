@@ -20,6 +20,7 @@ export interface Playlist {
   id: string;
   title: string;
   description: string;
+  thumbnail: string;
   order: number;
   totalVideos: number;
   createdAt: { _seconds: number };
@@ -72,7 +73,7 @@ export const getCoursePlaylists = async (courseId: string): Promise<Playlist[]> 
 
 export const createPlaylist = async (
   courseId: string,
-  data: { title: string; description: string; order: number }
+  data: { title: string; description: string; thumbnail: string; order: number }
 ): Promise<Playlist> => {
   const res = await apiClient.post(`/admin/courses/${courseId}/playlists`, data);
   return res.data;
@@ -81,7 +82,7 @@ export const createPlaylist = async (
 export const updatePlaylist = async (
   courseId: string,
   playlistId: string,
-  data: Partial<{ title: string; description: string; order: number }>
+  data: Partial<{ title: string; description: string; thumbnail: string; order: number }>
 ): Promise<void> => {
   await apiClient.put(`/admin/courses/${courseId}/playlists/${playlistId}`, data);
 };

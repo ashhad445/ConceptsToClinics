@@ -48,7 +48,7 @@ const CourseDetailPage: React.FC = () => {
   // ── Playlist modal state ───────────────────────────────────────────────────
   const [playlistModal, setPlaylistModal] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<PlaylistWithVideos | null>(null);
-  const [playlistForm, setPlaylistForm] = useState({ title: '', description: '', order: '1' });
+  const [playlistForm, setPlaylistForm] = useState({ title: '', description: '', thumbnail: '', order: '1' });
   const [savingPlaylist, setSavingPlaylist] = useState(false);
 
   // ── Attach existing playlist state ─────────────────────────────────────────
@@ -169,13 +169,13 @@ const CourseDetailPage: React.FC = () => {
 
   const openAddPlaylist = () => {
     setEditingPlaylist(null);
-    setPlaylistForm({ title: '', description: '', order: String(playlists.length + 1) });
+    setPlaylistForm({ title: '', description: '', thumbnail: '', order: String(playlists.length + 1) });
     setPlaylistModal(true);
   };
 
   const openEditPlaylist = (pl: PlaylistWithVideos) => {
     setEditingPlaylist(pl);
-    setPlaylistForm({ title: pl.title, description: pl.description, order: String(pl.order) });
+    setPlaylistForm({ title: pl.title, description: pl.description, thumbnail: pl.thumbnail || '', order: String(pl.order) });
     setPlaylistModal(true);
   };
 
@@ -617,6 +617,16 @@ const CourseDetailPage: React.FC = () => {
                   {plIdx + 1}
                 </div>
 
+                {/* Playlist Thumbnail */}
+                {pl.thumbnail && (
+                  <img
+                    src={pl.thumbnail}
+                    alt={pl.title}
+                    style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                )}
+
                 {/* Title + meta */}
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>{pl.title}</div>
@@ -832,6 +842,10 @@ const CourseDetailPage: React.FC = () => {
               style={{ resize: 'vertical' }}
             />
           </div>
+          <ImageUploadInput
+            value={playlistForm.thumbnail}
+            onChange={(url) => setPlaylistForm({ ...playlistForm, thumbnail: url })}
+          />
           <div className="form-group">
             <label className="form-label">Display Order</label>
             <input
